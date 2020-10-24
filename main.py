@@ -88,17 +88,44 @@ def writeSpecificData(xlsxFile, sheet, month, data):
                  ws.cell(row=row, column=tempCol-2).coordinate))
         row += 1
     updateCurrentRowCol(sheet, originalRow  + len(data) + 2, col)
-    ws.column_dimensions.bestFit = True
+    wb.save(xlsxFile)
+    wb.close()
+
+# Resets data in the sheets and rowCol files
+def resetData(xlsxFile):
+    wb = load_workbook(xlsxFile)
+    sheets = wb.sheetnames
+    for sheet in sheets:
+        updateCurrentRowCol(sheet, 1, 1)
+        wb.remove_sheet(wb.get_sheet_by_name(sheet))
+        wb.create_sheet(sheet)
     wb.save(xlsxFile)
     wb.close()
 
 # Calls writeSpecificData for all excel sheets.
-def writeAllData(xlsxFile, month):
-    data = openCSV("{}.csv".format(month))
-    foodExpenses, otherExpenses, income = sortData(data, month)
+def writeAllData(xlsxFile, action):
+    if action == "Reset" or action == "R":
+        resetData(xlsxFile)
+    elif action == "Help" or action == "H":
+        print("Possible actions are: ")
+        print("'Reset' or 'R' for resetting data")
+        print("'Insert' or 'I' for inserting data")
+        action = input("Action?\n")
+        writeAllData('finances.xlsx', action)        
+    elif action == "Insert" or action == "I":
+        month = input("File?\n")
+        data = openCSV("{}.csv".format(month))
+        foodExpenses, otherExpenses, income = sortData(data, month)
 
-    writeSpecificData(xlsxFile, 'foodExpenses', month, foodExpenses)
-    writeSpecificData(xlsxFile, 'otherExpenses', month, otherExpenses)
-    writeSpecificData(xlsxFile, 'income', month, income)
+        writeSpecificData(xlsxFile, 'foodExpenses', month, foodExpenses)
+        writeSpecificData(xlsxFile, 'otherExpenses', month, otherExpenses)
+        writeSpecificData(xlsxFile, 'income', month, income)
+    else:
+        print("Wrong input given. Type 'Help' or 'H' for help.")
+        print("try again: ")
+        action = input()
+        writeAllData('finances.xlsx', action)
 
-writeAllData('finances.xlsx', input("Month?\n").capitalize())
+action = input("Action?\n").capitalize()
+
+writeAllData('finances.xlsx', action)
